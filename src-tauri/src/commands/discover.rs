@@ -8,7 +8,8 @@ use serde_json;
 use tauri::{Emitter, State};
 
 use crate::db::{self, DbPool};
-use crate::path_utils::{central_skills_dir, path_to_string, resolve_home_dir};
+use crate::path_utils::{path_to_string, resolve_home_dir};
+use crate::commands::settings;
 use crate::AppState;
 
 const OBSIDIAN_PLATFORM_ID: &str = "obsidian";
@@ -1393,7 +1394,7 @@ pub async fn start_project_scan(
     SCAN_CANCEL.store(false, Ordering::Relaxed);
 
     let pool = &state.db;
-    let central_dir = central_skills_dir();
+    let central_dir = PathBuf::from(settings::get_central_skills_dir_impl(pool).await?);
     start_project_scan_impl(pool, roots, &central_dir, |event| match event {
         DiscoverEvent::Found(payload) => {
             let _ = app.emit("discover:found", payload);
@@ -1420,7 +1421,7 @@ pub async fn stop_project_scan() -> Result<(), String> {
 pub async fn get_discovered_skills(
     state: State<'_, AppState>,
 ) -> Result<Vec<DiscoveredProject>, String> {
-    let central_dir = central_skills_dir();
+    let central_dir = PathBuf::from(settings::get_central_skills_dir_impl(&state.db).await?);
     get_discovered_skills_impl(&state.db, &central_dir).await
 }
 
@@ -1504,7 +1505,7 @@ pub async fn import_discovered_skill_to_central(
         .ok_or_else(|| format!("Discovered skill '{}' not found", discovered_skill_id))?;
 
     // Determine central dir.
-    let central_dir = central_skills_dir();
+    let central_dir = PathBuf::from(settings::get_central_skills_dir_impl(pool).await?);
 
     // Extract the original skill directory name (last component of dir_path).
     let skill_dir_name = Path::new(&skill.dir_path)
