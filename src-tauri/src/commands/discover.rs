@@ -8,7 +8,7 @@ use serde_json;
 use tauri::{Emitter, State};
 
 use crate::db::{self, DbPool};
-use crate::path_utils::{path_to_string, resolve_home_dir};
+use crate::path_utils::{central_skills_dir, path_to_string, resolve_home_dir};
 use crate::commands::settings;
 use crate::AppState;
 
