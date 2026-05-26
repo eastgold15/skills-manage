@@ -1,4 +1,4 @@
-use tauri::State;
+﻿use tauri::State;
 
 use crate::db::{self, DbPool, ScanDirectory};
 use crate::path_utils::{central_skills_dir, expand_home_path, path_to_string};
@@ -139,7 +139,7 @@ pub async fn set_central_skills_dir_impl(pool: &DbPool, path: &str) -> Result<St
     // Read the old central dir setting and remove its scan directory entry.
     if let Ok(Some(old_path)) = db::get_setting(pool, "central_skills_dir").await {
         if !old_path.trim().is_empty() && old_path != expanded {
-            let _ = db::delete_builtin_scan_directory(pool, &old_path).await;
+            let _ = db::remove_scan_directory(pool, &old_path).await;
         }
     }
 

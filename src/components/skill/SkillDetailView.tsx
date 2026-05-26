@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type Ref, type ReactNode } from "react";
+﻿import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type Ref, type ReactNode } from "react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
@@ -764,10 +764,10 @@ export function SkillDetailView({
 
   // Sync editedContent when content loads (reset when content changes)
   useEffect(() => {
-    if (content && !editedContent) {
-      setEditedContent(content);
+    if (skillContent && !editedContent) {
+      setEditedContent(skillContent);
     }
-  }, [content]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [skillContent]); // eslint-disable-line react-hooks/exhaustive-deps
   const effectiveName = isFileMode
     ? (discoverMetadata?.name ?? "")
     : (detail?.name ?? detailRequest?.skillId ?? "");
@@ -874,7 +874,7 @@ export function SkillDetailView({
                         </div>
                       </>
                     ) : (
-                      <pre className="rounded-lg border border-border bg-card p-4 text-[12px] leading-5 font-mono whitespace-pre-wrap break-words text-foreground/80">
+                      <pre className="rounded-lg border border-border bg-card p-4 text-[12px] leading-5 font-mono whitespace-pre-wrap wrap-break-word text-foreground/80">
                         {previewContent}
                       </pre>
                     )
@@ -887,7 +887,7 @@ export function SkillDetailView({
               ) : activeTab === "raw" ? (
                 canEdit ? (
                   <textarea
-                    className="p-6 text-[12px] leading-5 font-mono whitespace-pre-wrap break-words text-foreground/80 bg-transparent border-none resize-none w-full h-full outline-none"
+                    className="p-6 text-[12px] leading-5 font-mono whitespace-pre-wrap wrap-break-word text-foreground/80 bg-transparent border-none resize-none w-full h-full outline-none"
                     role="tabpanel"
                     aria-label={t("detail.rawSource")}
                     value={editedContent}
@@ -896,11 +896,11 @@ export function SkillDetailView({
                   />
                 ) : (
                   <pre
-                    className="p-6 text-[12px] leading-5 font-mono whitespace-pre-wrap break-words text-foreground/80"
+                    className="p-6 text-[12px] leading-5 font-mono whitespace-pre-wrap wrap-break-word text-foreground/80"
                     role="tabpanel"
                     aria-label={t("detail.rawSource")}
                   >
-                    {content ?? t("detail.noContent")}
+                    {skillContent ?? t("detail.noContent")}
                   </pre>
                 )
               ) : (
