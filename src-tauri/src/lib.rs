@@ -116,6 +116,19 @@ pub fn run() {
             commands::marketplace::get_skill_explanation,
             commands::marketplace::explain_skill_stream,
             commands::marketplace::refresh_skill_explanation,
+            // MCP Servers
+            commands::mcp::create_mcp_server,
+            commands::mcp::get_all_mcp_servers,
+            commands::mcp::get_mcp_server_by_id,
+            commands::mcp::update_mcp_server,
+            commands::mcp::delete_mcp_server,
+            commands::mcp::install_mcp_server_to_agent,
+            commands::mcp::uninstall_mcp_server_from_agent,
+            commands::mcp::get_mcp_servers_for_agent,
+            commands::mcp::get_agents_for_mcp_server,
+            commands::mcp::is_mcp_server_installed_to_agent,
+            commands::mcp::batch_install_mcp_server_to_agents,
+            commands::mcp::batch_uninstall_mcp_server_from_agents,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

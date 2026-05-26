@@ -386,7 +386,11 @@
     },
     "language": "语言",
     "chinese": "中文",
-    "english": "English"
+    "english": "English",
+    "mcpServers": "MCP 服务器",
+    "mcpServersDesc": "管理 MCP（Model Context Protocol）服务器配置，可安装到各个 AI 平台。",
+    "addMcpServer": "添加 MCP 服务器",
+    "noMcpServers": "暂无 MCP 服务器。点击「添加 MCP 服务器」创建新配置。"
   },
   "addDir": {
     "title": "添加项目目录",
@@ -637,5 +641,46 @@
     "saveAndPush": "保存并推送",
     "savePushSuccess": "已保存并推送到远程仓库",
     "savePushError": "保存推送失败: {{error}}"
+  },
+  "mcpServer": {
+    "install": "安装",
+    "reinstall": "重新安装",
+    "installToPlatform": "将 {{name}} 安装到平台",
+    "edit": "编辑 {{name}}",
+    "deleteLabel": "删除 {{name}}",
+    "deleteSuccess": "已删除 MCP 服务器 {{name}}"
+  },
+  "mcpServerDialog": {
+    "addTitle": "添加 MCP 服务器",
+    "editTitle": "编辑 MCP 服务器",
+    "addDesc": "配置一个新的 MCP 服务器。",
+    "editDesc": "修改 MCP 服务器的配置。",
+    "name": "名称",
+    "namePlaceholder": "例如: Git Nexus",
+    "command": "命令",
+    "args": "参数",
+    "argsHint": "用空格分隔的命令参数",
+    "env": "环境变量",
+    "envHint": "JSON 格式的环境变量对象",
+    "cwd": "工作目录",
+    "requiredFields": "请填写必填字段。",
+    "invalidJson": "环境变量必须是有效的 JSON。",
+    "addSuccess": "MCP 服务器添加成功",
+    "updateSuccess": "MCP 服务器更新成功"
+  },
+  "mcpServerInstallDialog": {
+    "title": "安装 {{name}}",
+    "description": "选择要安装此 MCP 服务器的平台。",
+    "noPlatforms": "未检测到平台。请在设置中添加平台。",
+    "installed": "已安装",
+    "available": "可用",
+    "notDetected": "(未检测到)",
+    "install": "安装",
+    "installSuccess": "已成功安装到 {{count}} 个平台",
+    "uninstall": "卸载 {{count}} 个",
+    "uninstallSuccess": "已成功从 {{count}} 个平台卸载",
+    "installing": "安装中...",
+    "uninstalling": "卸载中...",
+    "noAgentsSelected": "未选择任何平台"
   }
 }

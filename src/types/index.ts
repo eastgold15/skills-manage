@@ -371,3 +371,30 @@ export interface GitHubImportProgressPayload {
   completedBytes: number;
   totalBytes: number;
 }
+
+// ─── MCP Server Types ──────────────────────────────────────────────────────────
+
+export interface McpServer {
+  id: string;
+  name: string;
+  command: string;
+  args: string[];
+  env?: Record<string, string> | null;
+  cwd?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface McpServerInstallation {
+  server_id: string;
+  agent_id: string;
+  installed_at: string;
+}
+
+export interface McpServerFormData {
+  name: string;
+  command: string;
+  args: string;
+  env?: string;
+  cwd?: string;
+}

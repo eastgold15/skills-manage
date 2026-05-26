@@ -386,7 +386,11 @@
     },
     "language": "Language",
     "chinese": "中文",
-    "english": "English"
+    "english": "English",
+    "mcpServers": "MCP Servers",
+    "mcpServersDesc": "Manage MCP (Model Context Protocol) server configurations that can be installed to AI platforms.",
+    "addMcpServer": "Add MCP Server",
+    "noMcpServers": "No MCP servers yet. Click \"Add MCP Server\" to create a new configuration."
   },
   "addDir": {
     "title": "Add Project Directory",
@@ -637,5 +641,46 @@
     "saveAndPush": "Save & Push",
     "savePushSuccess": "Saved and pushed to remote",
     "savePushError": "Save & push failed: {{error}}"
+  },
+  "mcpServer": {
+    "install": "Install",
+    "reinstall": "Reinstall",
+    "installToPlatform": "Install {{name}} to platforms",
+    "edit": "Edit {{name}}",
+    "deleteLabel": "Delete {{name}}",
+    "deleteSuccess": "MCP server {{name}} deleted"
+  },
+  "mcpServerDialog": {
+    "addTitle": "Add MCP Server",
+    "editTitle": "Edit MCP Server",
+    "addDesc": "Configure a new MCP server.",
+    "editDesc": "Modify the MCP server configuration.",
+    "name": "Name",
+    "namePlaceholder": "e.g. Git Nexus",
+    "command": "Command",
+    "args": "Arguments",
+    "argsHint": "Command arguments separated by spaces",
+    "env": "Environment Variables",
+    "envHint": "JSON-formatted environment variables object",
+    "cwd": "Working Directory",
+    "requiredFields": "Please fill in the required fields.",
+    "invalidJson": "Environment variables must be valid JSON.",
+    "addSuccess": "MCP server added successfully",
+    "updateSuccess": "MCP server updated successfully"
+  },
+  "mcpServerInstallDialog": {
+    "title": "Install {{name}}",
+    "description": "Select platforms to install this MCP server to.",
+    "noPlatforms": "No platforms detected. Please add platforms in Settings.",
+    "installed": "Installed",
+    "available": "Available",
+    "notDetected": "(not detected)",
+    "install": "Install",
+    "installSuccess": "Successfully installed to {{count}} platforms",
+    "uninstall": "Uninstall {{count}}",
+    "uninstallSuccess": "Successfully uninstalled from {{count}} platforms",
+    "installing": "Installing...",
+    "uninstalling": "Uninstalling...",
+    "noAgentsSelected": "No platforms selected"
   }
 }

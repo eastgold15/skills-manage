@@ -89,6 +89,25 @@ pub struct ScanDirectory {
     pub added_at: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
+pub struct McpServer {
+    pub id: String,
+    pub name: String,
+    pub command: String,
+    pub args: Vec<String>,
+    pub env: Option<serde_json::Value>,
+    pub cwd: Option<String>,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
+pub struct McpServerInstallation {
+    pub server_id: String,
+    pub agent_id: String,
+    pub installed_at: String,
+}
+
 // ─── Pool Creation ────────────────────────────────────────────────────────────
 
 /// Create a production SQLite pool for the given file path with WAL mode enabled.
@@ -349,6 +368,38 @@ pub async fn init_database(pool: &DbPool) -> Result<(), String> {
             created_at  TEXT NOT NULL DEFAULT (datetime('now')),
             updated_at  TEXT NOT NULL DEFAULT (datetime('now')),
             PRIMARY KEY (skill_id, lang)
+        )",
+    )
+    .execute(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    // mcp_servers table — MCP server configurations
+    sqlx::query(
+        "CREATE TABLE IF NOT EXISTS mcp_servers (
+            id         TEXT PRIMARY KEY,
+            name       TEXT NOT NULL,
+            command    TEXT NOT NULL,
+            args       TEXT NOT NULL,
+            env        TEXT,
+            cwd        TEXT,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+        )",
+    )
+    .execute(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    // mcp_server_installations table — MCP server installations to agents
+    sqlx::query(
+        "CREATE TABLE IF NOT EXISTS mcp_server_installations (
+            server_id   TEXT NOT NULL,
+            agent_id    TEXT NOT NULL,
+            installed_at TEXT NOT NULL,
+            PRIMARY KEY (server_id, agent_id),
+            FOREIGN KEY (server_id) REFERENCES mcp_servers(id),
+            FOREIGN KEY (agent_id) REFERENCES agents(id)
         )",
     )
     .execute(pool)
@@ -1899,6 +1950,248 @@ pub async fn get_skill_collections(
     .fetch_all(pool)
     .await
     .map_err(|e| e.to_string())
+}
+
+// ─── MCP Servers ──────────────────────────────────────────────────────────────
+
+/// Create a new MCP server configuration.
+pub async fn create_mcp_server(
+    pool: &DbPool,
+    id: &str,
+    name: &str,
+    command: &str,
+    args: &[String],
+    env: Option<&serde_json::Value>,
+    cwd: Option<&str>,
+) -> Result<McpServer, String> {
+    let now = Utc::now().to_rfc3339();
+    let args_json = serde_json::to_string(args).map_err(|e| e.to_string())?;
+    let env_json = env.map(|e| serde_json::to_string(e)).transpose().map_err(|e| e.to_string())?;
+
+    sqlx::query(
+        "INSERT INTO mcp_servers (id, name, command, args, env, cwd, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+    )
+    .bind(id)
+    .bind(name)
+    .bind(command)
+    .bind(&args_json)
+    .bind(env_json.as_deref())
+    .bind(cwd)
+    .bind(&now)
+    .bind(&now)
+    .execute(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    get_mcp_server_by_id(pool, id)
+        .await?
+        .ok_or_else(|| "Failed to retrieve newly created MCP server".to_string())
+}
+
+/// Retrieve all MCP servers.
+pub async fn get_all_mcp_servers(pool: &DbPool) -> Result<Vec<McpServer>, String> {
+    let rows = sqlx::query(
+        "SELECT id, name, command, args, env, cwd, created_at, updated_at FROM mcp_servers ORDER BY name"
+    )
+    .fetch_all(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    rows.into_iter()
+        .map(|row| {
+            let args: Vec<String> = serde_json::from_str(&row.get::<String, _>("args")).map_err(|e| e.to_string())?;
+            let env: Option<serde_json::Value> = row.get::<Option<String>, _>("env")
+                .map(|e| serde_json::from_str(&e)).transpose().map_err(|e| e.to_string())?;
+            Ok(McpServer {
+                id: row.get("id"),
+                name: row.get("name"),
+                command: row.get("command"),
+                args,
+                env,
+                cwd: row.get("cwd"),
+                created_at: row.get("created_at"),
+                updated_at: row.get("updated_at"),
+            })
+        })
+        .collect()
+}
+
+/// Retrieve an MCP server by ID.
+pub async fn get_mcp_server_by_id(pool: &DbPool, id: &str) -> Result<Option<McpServer>, String> {
+    let row = sqlx::query(
+        "SELECT id, name, command, args, env, cwd, created_at, updated_at FROM mcp_servers WHERE id = ?"
+    )
+    .bind(id)
+    .fetch_optional(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    match row {
+        Some(row) => {
+            let args: Vec<String> = serde_json::from_str(&row.get::<String, _>("args")).map_err(|e| e.to_string())?;
+            let env: Option<serde_json::Value> = row.get::<Option<String>, _>("env")
+                .map(|e| serde_json::from_str(&e)).transpose().map_err(|e| e.to_string())?;
+            Ok(Some(McpServer {
+                id: row.get("id"),
+                name: row.get("name"),
+                command: row.get("command"),
+                args,
+                env,
+                cwd: row.get("cwd"),
+                created_at: row.get("created_at"),
+                updated_at: row.get("updated_at"),
+            }))
+        }
+        None => Ok(None),
+    }
+}
+
+/// Update an MCP server configuration.
+pub async fn update_mcp_server(
+    pool: &DbPool,
+    id: &str,
+    name: &str,
+    command: &str,
+    args: &[String],
+    env: Option<&serde_json::Value>,
+    cwd: Option<&str>,
+) -> Result<McpServer, String> {
+    let now = Utc::now().to_rfc3339();
+    let args_json = serde_json::to_string(args).map_err(|e| e.to_string())?;
+    let env_json = env.map(|e| serde_json::to_string(e)).transpose().map_err(|e| e.to_string())?;
+
+    sqlx::query(
+        "UPDATE mcp_servers SET name = ?, command = ?, args = ?, env = ?, cwd = ?, updated_at = ? WHERE id = ?",
+    )
+    .bind(name)
+    .bind(command)
+    .bind(&args_json)
+    .bind(env_json.as_deref())
+    .bind(cwd)
+    .bind(&now)
+    .bind(id)
+    .execute(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    get_mcp_server_by_id(pool, id)
+        .await?
+        .ok_or_else(|| "Failed to retrieve updated MCP server".to_string())
+}
+
+/// Delete an MCP server and all its installations.
+pub async fn delete_mcp_server(pool: &DbPool, id: &str) -> Result<(), String> {
+    sqlx::query("DELETE FROM mcp_server_installations WHERE server_id = ?")
+        .bind(id)
+        .execute(pool)
+        .await
+        .map_err(|e| e.to_string())?;
+    sqlx::query("DELETE FROM mcp_servers WHERE id = ?")
+        .bind(id)
+        .execute(pool)
+        .await
+        .map(|_| ())
+        .map_err(|e| e.to_string())
+}
+
+/// Install an MCP server to an agent.
+pub async fn install_mcp_server_to_agent(
+    pool: &DbPool,
+    server_id: &str,
+    agent_id: &str,
+) -> Result<McpServerInstallation, String> {
+    let now = Utc::now().to_rfc3339();
+
+    sqlx::query(
+        "INSERT INTO mcp_server_installations (server_id, agent_id, installed_at)
+         VALUES (?, ?, ?)",
+    )
+    .bind(server_id)
+    .bind(agent_id)
+    .bind(&now)
+    .execute(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(McpServerInstallation {
+        server_id: server_id.to_string(),
+        agent_id: agent_id.to_string(),
+        installed_at: now,
+    })
+}
+
+/// Uninstall an MCP server from an agent.
+pub async fn uninstall_mcp_server_from_agent(
+    pool: &DbPool,
+    server_id: &str,
+    agent_id: &str,
+) -> Result<(), String> {
+    sqlx::query("DELETE FROM mcp_server_installations WHERE server_id = ? AND agent_id = ?")
+        .bind(server_id)
+        .bind(agent_id)
+        .execute(pool)
+        .await
+        .map(|_| ())
+        .map_err(|e| e.to_string())
+}
+
+/// Retrieve all MCP servers installed to an agent.
+pub async fn get_mcp_servers_for_agent(pool: &DbPool, agent_id: &str) -> Result<Vec<McpServer>, String> {
+    let rows = sqlx::query(
+        "SELECT s.id, s.name, s.command, s.args, s.env, s.cwd, s.created_at, s.updated_at
+         FROM mcp_servers s
+         JOIN mcp_server_installations i ON s.id = i.server_id
+         WHERE i.agent_id = ?
+         ORDER BY s.name"
+    )
+    .bind(agent_id)
+    .fetch_all(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    rows.into_iter()
+        .map(|row| {
+            let args: Vec<String> = serde_json::from_str(&row.get::<String, _>("args")).map_err(|e| e.to_string())?;
+            let env: Option<serde_json::Value> = row.get::<Option<String>, _>("env")
+                .map(|e| serde_json::from_str(&e)).transpose().map_err(|e| e.to_string())?;
+            Ok(McpServer {
+                id: row.get("id"),
+                name: row.get("name"),
+                command: row.get("command"),
+                args,
+                env,
+                cwd: row.get("cwd"),
+                created_at: row.get("created_at"),
+                updated_at: row.get("updated_at"),
+            })
+        })
+        .collect()
+}
+
+/// Retrieve all agents an MCP server is installed to.
+pub async fn get_agents_for_mcp_server(pool: &DbPool, server_id: &str) -> Result<Vec<String>, String> {
+    sqlx::query_scalar::<_, String>(
+        "SELECT agent_id FROM mcp_server_installations WHERE server_id = ? ORDER BY agent_id",
+    )
+    .bind(server_id)
+    .fetch_all(pool)
+    .await
+    .map_err(|e| e.to_string())
+}
+
+/// Check if an MCP server is installed to an agent.
+pub async fn is_mcp_server_installed_to_agent(pool: &DbPool, server_id: &str, agent_id: &str) -> Result<bool, String> {
+    let count = sqlx::query_scalar::<_, i64>(
+        "SELECT COUNT(*) FROM mcp_server_installations WHERE server_id = ? AND agent_id = ?",
+    )
+    .bind(server_id)
+    .bind(agent_id)
+    .fetch_one(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(count > 0)
 }
 
 // ─── Scan Directories ─────────────────────────────────────────────────────────

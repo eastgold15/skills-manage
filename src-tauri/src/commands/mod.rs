@@ -5,6 +5,7 @@ pub mod git;
 pub mod github_import;
 pub mod linker;
 pub mod marketplace;
+pub mod mcp;
 pub mod scanner;
 pub mod settings;
 pub mod skills;

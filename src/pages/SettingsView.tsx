@@ -18,10 +18,14 @@ import { Switch } from "@/components/ui/switch";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { useThemeStore, CatppuccinFlavor, CatppuccinAccent, ACCENT_NAMES } from "@/stores/themeStore";
 import { usePlatformStore } from "@/stores/platformStore";
+import { useMcpServerStore } from "@/stores/mcpServerStore";
 import { AddDirectoryDialog } from "@/components/settings/AddDirectoryDialog";
 import { PlatformDialog } from "@/components/settings/PlatformDialog";
+import { McpServerDialog } from "@/components/settings/McpServerDialog";
+import { McpServerInstallDialog } from "@/components/settings/McpServerInstallDialog";
+import { McpServerRow } from "@/components/settings/McpServerRow";
 import { Input } from "@/components/ui/input";
-import { AgentWithStatus, ScanDirectory } from "@/types";
+import { AgentWithStatus, ScanDirectory, McpServer, McpServerFormData } from "@/types";
 import { AI_PROVIDERS, REGION_LABELS, RegionId } from "@/data/aiProviders";
 import { deriveHomeDir, formatPathForDisplay, joinPathForDisplay } from "@/lib/path";
 
@@ -300,6 +304,26 @@ export function SettingsView() {
   const [centralDirInput, setCentralDirInput] = useState("");
   const [centralDirMessage, setCentralDirMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
+  // ── MCP Servers state ──────────────────────────────────────────────────────
+  const mcpServers = useMcpServerStore((s) => s.servers);
+  const isLoadingMcpServers = useMcpServerStore((s) => s.isLoading);
+  const installedAgentIds = useMcpServerStore((s) => s.installedAgentIds);
+  const createMcpServer = useMcpServerStore((s) => s.createServer);
+  const updateMcpServer = useMcpServerStore((s) => s.updateServer);
+  const deleteMcpServer = useMcpServerStore((s) => s.deleteServer);
+  const batchInstallMcpServer = useMcpServerStore((s) => s.batchInstallToAgents);
+  const batchUninstallMcpServer = useMcpServerStore((s) => s.batchUninstallFromAgents);
+
+  const [isMcpServerDialogOpen, setIsMcpServerDialogOpen] = useState(false);
+  const [editingMcpServer, setEditingMcpServer] = useState<McpServer | null>(null);
+  const [isMcpInstallDialogOpen, setIsMcpInstallDialogOpen] = useState(false);
+  const [installingServer, setInstallingServer] = useState<McpServer | null>(null);
+  const [removingMcpServer, setRemovingMcpServer] = useState<string | null>(null);
+
+  useEffect(() => {
+    useMcpServerStore.getState().initialize();
+  }, []);
+
   // ── Load on mount ──────────────────────────────────────────────────────────
 
   useEffect(() => {
@@ -488,6 +512,48 @@ export function SettingsView() {
     } catch (err) {
       setCentralDirMessage({ type: "error", text: String(err) });
     }
+  }
+
+  // ── MCP Servers Handlers ──────────────────────────────────────────────────
+
+  function handleOpenAddMcpServer() {
+    setEditingMcpServer(null);
+    setIsMcpServerDialogOpen(true);
+  }
+
+  function handleOpenEditMcpServer(server: McpServer) {
+    setEditingMcpServer(server);
+    setIsMcpServerDialogOpen(true);
+  }
+
+  async function handleAddMcpServer(data: McpServerFormData) {
+    await createMcpServer(data);
+  }
+
+  async function handleEditMcpServer(id: string, data: McpServerFormData) {
+    await updateMcpServer(id, data);
+  }
+
+  async function handleDeleteMcpServer(id: string) {
+    setRemovingMcpServer(id);
+    try {
+      await deleteMcpServer(id);
+    } finally {
+      setRemovingMcpServer(null);
+    }
+  }
+
+  function handleOpenMcpInstallDialog(server: McpServer) {
+    setInstallingServer(server);
+    setIsMcpInstallDialogOpen(true);
+  }
+
+  async function handleMcpServerInstall(serverId: string, agentIds: string[]) {
+    await batchInstallMcpServer(serverId, agentIds);
+  }
+
+  async function handleMcpServerUninstall(serverId: string, agentIds: string[]) {
+    await batchUninstallMcpServer(serverId, agentIds);
   }
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -783,7 +849,58 @@ export function SettingsView() {
           </CardContent>
         </Card>
 
-        {/* ── Section 4: Scan Directories (compact) ─────────────────────── */}
+        {/* ── Section 4: MCP Servers ────────────────────────────────────── */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>{t("settings.mcpServers")}</CardTitle>
+                <CardDescription className="mt-1">
+                  {t("settings.mcpServersDesc")}
+                </CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleOpenAddMcpServer}
+                aria-label={t("settings.addMcpServer")}
+              >
+                <Plus className="size-3.5" />
+                <span>{t("settings.addMcpServer")}</span>
+              </Button>
+            </div>
+          </CardHeader>
+
+          <CardContent>
+            {isLoadingMcpServers ? (
+              <div className="flex items-center gap-2 py-4 text-muted-foreground text-sm justify-center">
+                <Loader2 className="size-4 animate-spin" />
+                <span>{t("settings.loading")}</span>
+              </div>
+            ) : mcpServers.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">
+                {t("settings.noMcpServers")}
+              </p>
+            ) : (
+              <div className="rounded-lg border border-border overflow-hidden">
+                {mcpServers.map((server) => (
+                  <McpServerRow
+                    key={server.id}
+                    server={server}
+                    installedAgentIds={installedAgentIds[server.id] || []}
+                    agents={agents}
+                    onEdit={handleOpenEditMcpServer}
+                    onDelete={handleDeleteMcpServer}
+                    onInstall={handleOpenMcpInstallDialog}
+                    isDeleting={removingMcpServer === server.id}
+                  />
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* ── Section 5: Scan Directories (compact) ─────────────────────── */}
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -967,6 +1084,24 @@ export function SettingsView() {
         platform={editingPlatform}
         onAdd={handleAddPlatform}
         onEdit={handleEditPlatform}
+      />
+
+      <McpServerDialog
+        open={isMcpServerDialogOpen}
+        onOpenChange={setIsMcpServerDialogOpen}
+        server={editingMcpServer}
+        onAdd={handleAddMcpServer}
+        onEdit={handleEditMcpServer}
+      />
+
+      <McpServerInstallDialog
+        open={isMcpInstallDialogOpen}
+        onOpenChange={setIsMcpInstallDialogOpen}
+        server={installingServer}
+        agents={agents}
+        installedAgentIds={installingServer ? (installedAgentIds[installingServer.id] || []) : []}
+        onInstall={handleMcpServerInstall}
+        onUninstall={handleMcpServerUninstall}
       />
     </div>
   );
