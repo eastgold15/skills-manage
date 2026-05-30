@@ -8,6 +8,8 @@ import { MarketplaceView } from "@/pages/MarketplaceView";
 import { SettingsView } from "@/pages/SettingsView";
 import { DiscoverView } from "@/pages/DiscoverView";
 import { ObsidianVaultView } from "@/pages/ObsidianVaultView";
+import { McpCentralView } from "@/pages/McpCentralView";
+import { McpPlatformView } from "@/pages/McpPlatformView";
 
 function App() {
   return (
@@ -33,6 +35,13 @@ function App() {
         <Route path="obsidian/:vaultId" element={<ObsidianVaultView />} />
         {/* Settings */}
         <Route path="settings" element={<SettingsView />} />
+
+        {/* MCP Management Routes */}
+        <Route path="mcp/central" element={<McpCentralView />} />
+        <Route path="mcp/platform/:agentId" element={<McpPlatformView />} />
+        <Route path="mcp/discover" element={<DiscoverView />} />
+        <Route path="mcp/marketplace" element={<MarketplaceView />} />
+        <Route path="mcp/collections" element={<CollectionsListView />} />
       </Route>
     </Routes>
   );
