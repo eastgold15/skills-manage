@@ -642,6 +642,38 @@
     "savePushSuccess": "已保存并推送到远程仓库",
     "savePushError": "保存推送失败: {{error}}"
   },
+  "mcp": {
+    "manage": {
+      "title": "MCP 管理"
+    },
+    "sidebar": {
+      "centralMcps": "中央 MCP 库",
+      "discovered": "项目 MCP 库",
+      "marketplace": "MCP 市场",
+      "collections": "MCP 集合"
+    },
+    "central": {
+      "description": "管理您的 MCP 服务器配置，可安装到各个 AI 平台",
+      "empty": "暂无 MCP 服务器。点击下方按钮添加新配置。"
+    },
+    "platform": {
+      "unknown": "未知平台",
+      "noPath": "未设置路径",
+      "empty": "此平台尚未安装任何 MCP 服务器。",
+      "browseCentral": "浏览中央库"
+    },
+    "common": {
+      "add": "添加 MCP 服务器"
+    },
+    "server": {
+      "install": "安装",
+      "reinstall": "重新安装",
+      "installToPlatform": "将 {{name}} 安装到平台",
+      "edit": "编辑 {{name}}",
+      "deleteLabel": "删除 {{name}}",
+      "deleteSuccess": "已删除 MCP 服务器 {{name}}"
+    }
+  },
   "mcpServer": {
     "install": "安装",
     "reinstall": "重新安装",

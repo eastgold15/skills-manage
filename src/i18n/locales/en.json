@@ -642,6 +642,38 @@
     "savePushSuccess": "Saved and pushed to remote",
     "savePushError": "Save & push failed: {{error}}"
   },
+  "mcp": {
+    "manage": {
+      "title": "MCP Manage"
+    },
+    "sidebar": {
+      "centralMcps": "Central MCPs",
+      "discovered": "Project MCPs",
+      "marketplace": "MCP Marketplace",
+      "collections": "MCP Collections"
+    },
+    "central": {
+      "description": "Manage your MCP server configurations, installable to AI platforms",
+      "empty": "No MCP servers yet. Click below to add a new configuration."
+    },
+    "platform": {
+      "unknown": "Unknown Platform",
+      "noPath": "No path set",
+      "empty": "No MCP servers installed on this platform.",
+      "browseCentral": "Browse Central"
+    },
+    "common": {
+      "add": "Add MCP Server"
+    },
+    "server": {
+      "install": "Install",
+      "reinstall": "Reinstall",
+      "installToPlatform": "Install {{name}} to platforms",
+      "edit": "Edit {{name}}",
+      "deleteLabel": "Delete {{name}}",
+      "deleteSuccess": "MCP server {{name}} deleted"
+    }
+  },
   "mcpServer": {
     "install": "Install",
     "reinstall": "Reinstall",
