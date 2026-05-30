@@ -20,8 +20,10 @@ export type NavGroup = {
   items: NavItem[];
 };
 
+export type ModuleType = 'skills' | 'mcp';
+
 export type ModuleConfig = {
-  id: string;
+  id: ModuleType;
   name: string;
   icon: React.ElementType;
   navGroups: NavGroup[];

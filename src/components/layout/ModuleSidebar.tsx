@@ -17,15 +17,13 @@ import type { ModuleConfig } from "./types";
 interface ModuleSidebarProps {
   moduleConfig: ModuleConfig;
   showAllPlatformsKey: string;
-  mcpServersByAgent?: Record<string, number>;
-  skillsByAgent?: Record<string, number>;
+  countByAgent: Record<string, number>;
 }
 
 export function ModuleSidebar({
   moduleConfig,
   showAllPlatformsKey,
-  mcpServersByAgent,
-  skillsByAgent,
+  countByAgent,
 }: ModuleSidebarProps) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -41,12 +39,11 @@ export function ModuleSidebar({
     }
   });
 
+  // 只根据当前模块的 count 来过滤平台
   const platformAgents = agents.filter(
     (a) =>
       isEnabledInstallTargetAgent(a) &&
-      (showAllPlatforms ||
-        (skillsByAgent?.[a.id] ?? 0) > 0 ||
-        (mcpServersByAgent?.[a.id] ?? 0) > 0)
+      (showAllPlatforms || (countByAgent?.[a.id] ?? 0) > 0)
   );
   const lobsterAgents = platformAgents.filter((a) => a.category === "lobster");
   const codingAgents = platformAgents.filter((a) => a.category !== "lobster");
@@ -62,9 +59,6 @@ export function ModuleSidebar({
       return next;
     });
   }
-
-  const countByAgent =
-    moduleConfig.id === "mcp" ? mcpServersByAgent : skillsByAgent;
 
   return (
     <nav
@@ -281,16 +275,20 @@ function AgentNavItem({
   count,
   moduleId,
 }: AgentNavItemProps) {
+  // Skills 模块使用旧路由，MCP 模块使用新路由
   const isActive =
-    pathname === `/${moduleId}/platform/${agent.id}` ||
-    pathname === `/platform/${agent.id}`;
+    (moduleId === "skills" && pathname === `/platform/${agent.id}`) ||
+    (moduleId === "mcp" && pathname === `/mcp/platform/${agent.id}`);
+
+  const targetPath =
+    moduleId === "skills"
+      ? `/platform/${agent.id}`
+      : `/mcp/platform/${agent.id}`;
 
   return (
     <div className="relative">
       <button
-        onClick={() =>
-          navigate(`/${moduleId}/platform/${agent.id}`)
-        }
+        onClick={() => navigate(targetPath)}
         title={agent.display_name}
         className={cn(
           "flex items-center w-full rounded-md transition-colors cursor-pointer",
