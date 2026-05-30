@@ -21,14 +21,18 @@ interface McpServerState {
   error: string | null;
   installedAgentIds: Record<string, string[]>;
 
+  // Computed
+  mcpServersByAgent: Record<string, McpServer[]>;
+
   // Actions
   initialize: () => Promise<void>;
   refresh: () => Promise<void>;
+  loadMcpServers: () => Promise<void>;
   createServer: (data: McpServerFormData) => Promise<McpServer>;
   updateServer: (id: string, data: McpServerFormData) => Promise<McpServer>;
-  deleteServer: (id: string) => Promise<void>;
+  deleteMcpServer: (id: string) => Promise<void>;
   installToAgent: (serverId: string, agentId: string) => Promise<void>;
-  uninstallFromAgent: (serverId: string, agentId: string) => Promise<void>;
+  uninstallMcpServerFromAgent: (serverId: string, agentId: string) => Promise<void>;
   batchInstallToAgents: (serverId: string, agentIds: string[]) => Promise<void>;
   batchUninstallFromAgents: (serverId: string, agentIds: string[]) => Promise<void>;
   getInstalledAgents: (serverId: string) => Promise<string[]>;
@@ -39,6 +43,7 @@ export const useMcpServerStore = create<McpServerState>((set, get) => ({
   isLoading: false,
   error: null,
   installedAgentIds: {},
+  mcpServersByAgent: {},
 
   initialize: async () => {
     set({ isLoading: true, error: null });
@@ -61,6 +66,10 @@ export const useMcpServerStore = create<McpServerState>((set, get) => ({
   },
 
   refresh: async () => {
+    await get().initialize();
+  },
+
+  loadMcpServers: async () => {
     await get().initialize();
   },
 
@@ -126,6 +135,10 @@ export const useMcpServerStore = create<McpServerState>((set, get) => ({
   },
 
   deleteServer: async (id: string) => {
+    await get().deleteMcpServer(id);
+  },
+
+  deleteMcpServer: async (id: string) => {
     if (!isTauriRuntime()) {
       set((state) => ({ servers: state.servers.filter((s) => s.id !== id) }));
       return;
@@ -161,6 +174,10 @@ export const useMcpServerStore = create<McpServerState>((set, get) => ({
   },
 
   uninstallFromAgent: async (serverId: string, agentId: string) => {
+    await get().uninstallMcpServerFromAgent(serverId, agentId);
+  },
+
+  uninstallMcpServerFromAgent: async (serverId: string, agentId: string) => {
     if (!isTauriRuntime()) {
       set((state) => ({
         installedAgentIds: {
@@ -233,3 +250,23 @@ export const useMcpServerStore = create<McpServerState>((set, get) => ({
     return agents;
   },
 }));
+
+export const useMcpServerByAgent = () => {
+  const servers = useMcpServerStore((s) => s.servers);
+  const installedAgentIds = useMcpServerStore((s) => s.installedAgentIds);
+
+  const mcpServersByAgent: Record<string, McpServer[]> = {};
+  
+  servers.forEach((server) => {
+    const agents = installedAgentIds[server.id] || [];
+    agents.forEach((agentId) => {
+      if (!mcpServersByAgent[agentId]) {
+        mcpServersByAgent[agentId] = [];
+      }
+      mcpServersByAgent[agentId].push(server);
+    });
+  });
+
+  return mcpServersByAgent;
+};
+

@@ -5,28 +5,29 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { InlineConfirmAction } from "@/components/ui/inline-confirm-action";
 import { McpServer } from "@/types";
-import { AgentWithStatus } from "@/types";
+import { useMcpServerStore } from "@/stores/mcpServerStore";
+import { usePlatformStore } from "@/stores/platformStore";
 
 interface McpServerRowProps {
   server: McpServer;
-  installedAgentIds: string[];
-  agents: AgentWithStatus[];
-  onEdit: (server: McpServer) => void;
+  onEdit?: (server: McpServer) => void;
   onDelete: (id: string) => void;
   onInstall: (server: McpServer) => void;
-  isDeleting: boolean;
+  isDeleting?: boolean;
+  showDeleteAsUninstall?: boolean;
 }
 
 export function McpServerRow({
   server,
-  installedAgentIds,
-  agents,
   onEdit,
   onDelete,
   onInstall,
-  isDeleting,
+  isDeleting = false,
+  showDeleteAsUninstall = false,
 }: McpServerRowProps) {
   const { t } = useTranslation();
+  const installedAgentIds = useMcpServerStore((s) => s.installedAgentIds[server.id] || []);
+  const agents = usePlatformStore((s) => s.agents);
   const installedAgents = agents.filter((a) => installedAgentIds.includes(a.id));
 
   return (
@@ -67,22 +68,33 @@ export function McpServerRow({
             {installedAgentIds.length > 0 ? t("mcpServer.reinstall") : t("mcpServer.install")}
           </span>
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onEdit(server)}
-          aria-label={t("mcpServer.edit", { name: server.name })}
-        >
-          <Pencil className="size-3.5" />
-        </Button>
+        {onEdit && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onEdit(server)}
+            aria-label={t("mcpServer.edit", { name: server.name })}
+          >
+            <Pencil className="size-3.5" />
+          </Button>
+        )}
         <InlineConfirmAction
           onConfirm={() => {
             onDelete(server.id);
-            toast.success(t("mcpServer.deleteSuccess", { name: server.name }));
+            toast.success(showDeleteAsUninstall 
+              ? t("mcpServer.deleteSuccess", { name: server.name })
+              : t("mcpServer.deleteSuccess", { name: server.name })
+            );
           }}
           isLoading={isDeleting}
-          idleAriaLabel={t("mcpServer.deleteLabel", { name: server.name })}
-          idleTitle={t("mcpServer.deleteLabel", { name: server.name })}
+          idleAriaLabel={showDeleteAsUninstall 
+            ? t("common.uninstall")
+            : t("mcpServer.deleteLabel", { name: server.name })
+          }
+          idleTitle={showDeleteAsUninstall 
+            ? t("common.uninstall")
+            : t("mcpServer.deleteLabel", { name: server.name })
+          }
           confirmLabel={t("common.confirmDelete")}
           icon={<Trash2 className="size-3.5" />}
         />

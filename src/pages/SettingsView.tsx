@@ -310,7 +310,7 @@ export function SettingsView() {
   const installedAgentIds = useMcpServerStore((s) => s.installedAgentIds);
   const createMcpServer = useMcpServerStore((s) => s.createServer);
   const updateMcpServer = useMcpServerStore((s) => s.updateServer);
-  const deleteMcpServer = useMcpServerStore((s) => s.deleteServer);
+  const deleteMcpServerAction = useMcpServerStore((s) => s.deleteMcpServer);
   const batchInstallMcpServer = useMcpServerStore((s) => s.batchInstallToAgents);
   const batchUninstallMcpServer = useMcpServerStore((s) => s.batchUninstallFromAgents);
 
@@ -537,7 +537,7 @@ export function SettingsView() {
   async function handleDeleteMcpServer(id: string) {
     setRemovingMcpServer(id);
     try {
-      await deleteMcpServer(id);
+      await deleteMcpServerAction(id);
     } finally {
       setRemovingMcpServer(null);
     }
@@ -887,8 +887,6 @@ export function SettingsView() {
                   <McpServerRow
                     key={server.id}
                     server={server}
-                    installedAgentIds={installedAgentIds[server.id] || []}
-                    agents={agents}
                     onEdit={handleOpenEditMcpServer}
                     onDelete={handleDeleteMcpServer}
                     onInstall={handleOpenMcpInstallDialog}
