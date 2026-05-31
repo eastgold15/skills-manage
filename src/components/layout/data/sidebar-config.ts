@@ -22,10 +22,6 @@ export const skillsModuleConfig: ModuleConfig = {
       ],
     },
   ],
-  getCountByAgent: () => {
-    // 在 MainSidebar 中通过 hook 获取，这里不需要实现
-    return {};
-  },
 };
 
 export const mcpModuleConfig: ModuleConfig = {
@@ -42,10 +38,6 @@ export const mcpModuleConfig: ModuleConfig = {
       ],
     },
   ],
-  getCountByAgent: () => {
-    // 在 MainSidebar 中通过 hook 获取，这里不需要实现
-    return {};
-  },
 };
 
 export const sidebarModules = {

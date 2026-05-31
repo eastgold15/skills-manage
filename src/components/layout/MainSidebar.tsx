@@ -1,12 +1,11 @@
-import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Settings } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { ModuleSidebar } from "./ModuleSidebar";
 import { sidebarModules } from "./data/sidebar-config";
+import { usePlatformStore } from "@/stores/platformStore";
 import { useMcpServerByAgent } from "@/stores/mcpServerStore";
-import { useCentralSkillsStore } from "@/stores/centralSkillsStore";
 import type { ModuleType } from "./types";
 
 export function MainSidebar() {
@@ -19,8 +18,12 @@ export function MainSidebar() {
   const activeModule: ModuleType = isMcpMode ? "mcp" : "skills";
 
   // 获取对应模块的 countByAgent
-  const skillsByAgent = useCentralSkillsStore((s) => s.skillsByAgent);
-  const mcpServersByAgent = useMcpServerByAgent();
+  const skillsByAgent = usePlatformStore((s) => s.skillsByAgent);
+  const mcpServersByAgentFull = useMcpServerByAgent();
+  const mcpServersByAgent: Record<string, number> = {};
+  for (const [agentId, servers] of Object.entries(mcpServersByAgentFull)) {
+    mcpServersByAgent[agentId] = servers.length;
+  }
 
   const currentModuleConfig =
     activeModule === "skills"

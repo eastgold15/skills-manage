@@ -134,7 +134,7 @@ export function ModuleSidebar({
                     className={cn(
                       "flex items-center w-full rounded-md transition-colors cursor-pointer",
                       !isActive &&
-                        "hover:bg-primary/15 hover:text-primary",
+                      "hover:bg-primary/15 hover:text-primary",
                       isActive && "bg-hover-bg text-white",
                       item.disabled && "opacity-50 cursor-not-allowed",
                       expanded
